@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+# INIT
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/bash/forcer-lib.sh"
+
+# SCRIPT
+title "🚀 Setup starten"
+step "System vorbereiten"
+
+debug_var "PROJECT_DIR" "$PROJECT_DIR"
+note "Dies ist eine kleine Info für dich."
+
+textblock "Dieser Textblock ist nützlich für größere Hinweise oder Erklärungen, die automatisch umgebrochen werden."
+
+if ask_yes_no "Möchtest du fortfahren?"; then
+  log "Okay, weiter geht’s!"
+else
+  fail "Abgebrochen vom Benutzer."
+  exit 0
+fi
+
+ask_string "Wie soll dein Projekt heißen?" PROJECT_NAME
+success "Projektname: $PROJECT_NAME"
+
+

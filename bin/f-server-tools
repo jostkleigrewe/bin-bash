@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Speicherort dieses Skripts (egal, von wo es aufgerufen wird)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Starte Python-Skript relativ zu diesem Pfad
+python3 "$SCRIPT_DIR/../server-tools/server-tools.py"

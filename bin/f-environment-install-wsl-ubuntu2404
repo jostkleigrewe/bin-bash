@@ -1,0 +1,442 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# 💡 Projektpfade & Bibliothek
+# -----------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$SCRIPT_DIR/../"
+FORCER_LIB="$PROJECT_DIR/lib/bash/forcer-lib.sh"
+
+if [[ -f "$FORCER_LIB" ]]; then
+  source "$FORCER_LIB"
+else
+  echo "❌ Forcer-Lib nicht gefunden: $FORCER_LIB"
+  exit 1
+fi
+
+
+# -----------------------------------------------------------------------------
+# 💡 Start
+# -----------------------------------------------------------------------------
+emptyline 3
+title "🛠 Einrichtung deiner Ubuntu 24.04 WSL-Entwicklungsumgebung"
+info "Projektordner: $PROJECT_DIR"
+cd "$PROJECT_DIR"
+emptyline
+
+
+# -----------------------------------------------------------------------------
+# 📦 Konfiguration
+# -----------------------------------------------------------------------------
+PACKAGES=(
+
+  # 🔧 Basis-Tools & Systemhilfe
+  curl                    # Werkzeug zum Abrufen von Dateien über HTTP, HTTPS, FTP
+  git                     # Versionsverwaltung
+  zip                     # Archivierungswerkzeug (ZIP)
+  unzip                   # Dekomprimiert ZIP-Dateien
+  make                    # Build-Tool für Projekte (z. B. C, C++, Tools)
+  software-properties-common  # Ermöglicht `add-apt-repository` für zusätzliche PPAs
+  ca-certificates         # SSL-Zertifikate für HTTPS-Zugriff
+  lsb-release             # LSB-Release-Info (z. B. für `lsb_release -a`)
+  apt-transport-https     # Unterstützt apt über HTTPS (sicherer Paketbezug)
+
+  # 🔧 Komfort & Dateiverarbeitung
+  dos2unix                # Konvertiert Windows-Zeilenenden (CRLF → LF)
+  ffmpeg                  # Multimedia-Toolkit (Audio/Video konvertieren)
+  gitk                    # GUI-Tool zur Git-Historie (optional, grafisch)
+  htop                    # Interaktiver Prozessmonitor
+  id3v2                   # ID3-Tags in MP3-Dateien lesen/schreiben
+  rename                  # Batch-Dateiumbenennung
+  unzip                   # (erneut – evtl. Redundanz?) Entpacken von ZIP-Dateien
+  util-linux              # Diverse System-Utilities (z. B. `lsblk`, `mount`)
+  vim                     # Texteditor im Terminal
+  xclip                   # Kommandozeilen-Zugriff auf Zwischenablage (Clipboard)
+
+  # 🐍 Python: Grundfunktionen
+  python3-eyed3           # Tool zur MP3-Tag-Verwaltung in Python
+  python3-pip             # Python-Paketmanager `pip`
+  python3-venv            # Tool zum Erstellen virtueller Python-Umgebungen
+  apache2                 # Webserver – für lokale Tests oder als Reverse Proxy
+
+  # 🐍 Python: Dev & Erweiterungspakete
+  python3-dev             # Header-Dateien & Libs für C-basierte Python-Module
+  build-essential         # Compiler & Tools für native Paketkompilierung
+  python3-setuptools      # Unterstützt `setup.py` Installationen
+  python3-wheel           # Hilft beim Bauen & Installieren von `.whl` Paketen
+
+  # 🧪 Optional: Python für Data Science / Notebooks
+  python3-numpy           # Mathematische Berechnungen mit Arrays
+  python3-pandas          # Datenmanipulation & -analyse
+  python3-matplotlib      # Visualisierungen (Diagramme etc.)
+  jupyter-notebook        # Webbasierte interaktive Python-Umgebung
+)
+
+PHP_VERSIONS=(8.2 8.3 8.4)
+declare -A PHP_MODULES=(
+  [8.2]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
+  [8.3]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
+  [8.4]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
+)
+
+NODE_VERSIONS=(--lts node)
+
+PYTHON_TOOLS=(ipython black flake8 mypy pytest)
+
+
+# -----------------------------------------------------------------------------
+# 📦 Environment Setup: .env.local
+# -----------------------------------------------------------------------------
+title "📦 Environment Setup: .env.local konfigurieren"
+
+# Prüfe, ob .env.local nicht existiert
+if [[ ! -f "$PROJECT_DIR/.env.local" ]]; then
+  info ".env.local existiert nicht. Erstelle es auf Basis von .env.local.dist ..."
+
+  # Kopiere .env.local.dist nach .env.local
+  cp "$PROJECT_DIR/.env.local.dist" "$PROJECT_DIR/.env.local"
+  if [[ $? -eq 0 ]]; then
+    success ".env.local wurde erfolgreich erstellt."
+  else
+    error "Fehler beim Kopieren von .env.local.dist nach .env.local"
+    exit 1
+  fi
+
+  # Frage den Benutzer, ob er die Datei im Editor öffnen möchte
+  if ask_yes_no "Möchtest du .env.local im Editor öffnen?" "y"; then
+    info "Öffne .env.local im Editor ($EDITOR_CMD)..."
+    $EDITOR_CMD .env.local
+  else
+    info "Das Öffnen des Editors wurde übersprungen."
+    exit 1
+  fi
+
+  info "Öffne .env.local im Editor ($EDITOR_CMD)..."
+  $EDITOR_CMD .env.local
+else
+  info ".env.local existiert bereits. Überspringe die Erstellung."
+fi
+
+
+# -----------------------------------------------------------------------------
+# 📦 Systempakete
+# -----------------------------------------------------------------------------
+title "🧱 Update & Grundpakete installieren"
+step "🧱 Update der Paketquellen"
+sudo apt update
+
+step "🧱 Upgrade bestehender Pakete"
+sudo apt upgrade -y
+
+step "🧱 Systempakete installieren"
+sudo apt install -y "${PACKAGES[@]}"
+success "Systempakete installiert."
+
+
+# -----------------------------------------------------------------------------
+# 🐘 Git
+# -----------------------------------------------------------------------------
+title "🐘 Git konfigurieren"
+
+# Setze pull.rebase immer
+info "Setze pull.rebase auf 'true'."
+git config --global pull.rebase true
+
+# Debug: Aktuelle Git-Konfiguration auslesen
+current_email=$(git config --global user.email || :)
+current_name=$(git config --global user.name || :)
+
+info "Aktuelle Git-Konfiguration:"
+info "  user.email: ${current_email:-<nicht gesetzt>}"
+info "  user.name:  ${current_name:-<nicht gesetzt>}"
+
+# Setze user.email, falls noch nicht gesetzt und wenn GIT_EMAIL definiert ist
+if [ -z "$current_email" ]; then
+  if [ -n "$GIT_EMAIL" ]; then
+    info "Setze Git user.email auf: $GIT_EMAIL"
+    git config --global user.email "$GIT_EMAIL"
+  else
+    warn "GIT_EMAIL ist nicht definiert. Überspringe das Setzen von user.email."
+  fi
+else
+  info "Git user.email ist bereits gesetzt. Überspringe die Konfiguration."
+fi
+
+
+# Setze user.name, falls noch nicht gesetzt und wenn GIT_NAME definiert ist
+if [ -z "$current_name" ]; then
+  if [ -n "$GIT_NAME" ]; then
+    info "Setze Git user.name auf: $GIT_NAME"
+    git config --global user.name "$GIT_NAME"
+  else
+    warn "GIT_NAME ist nicht definiert. Überspringe das Setzen von user.name."
+  fi
+else
+  info "Git user.name ist bereits gesetzt. Überspringe die Konfiguration."
+fi
+
+success "Git-Konfiguration aktualisiert."
+
+
+# -----------------------------------------------------------------------------
+# 🐘 PHP-Versionen & Module
+# -----------------------------------------------------------------------------
+title "🐘 PHP-Versionen & Module installieren"
+if [[ ! -f /etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources ]]; then
+  step "🔁 PHP-Repository von ondrej hinzufügen"
+  sudo add-apt-repository -y ppa:ondrej/php
+  sudo apt update
+else
+  info "📦 PHP-Repository bereits eingebunden – überspringe"
+fi
+
+for version in "${PHP_VERSIONS[@]}"; do
+  step "📦 Installiere PHP $version"
+  sudo apt install -y php$version
+
+  IFS=' ' read -ra MODULES <<< "${PHP_MODULES[$version]}"
+  for mod in "${MODULES[@]}"; do
+    info "➕ php$version-$mod"
+    sudo apt install -y php$version-$mod
+  done
+
+  sudo update-alternatives --install /usr/bin/php php /usr/bin/php$version $((100 + ${version//./}))
+  success "PHP $version + Module installiert"
+done
+
+
+# -----------------------------------------------------------------------------
+# 🎼 Composer
+# -----------------------------------------------------------------------------
+title "🎼 Composer prüfen & ggf. aktualisieren"
+
+if command -v composer &>/dev/null; then
+  CURRENT_VERSION=$(composer --version)
+  step "Composer ist bereits installiert: $CURRENT_VERSION"
+  step "Versuche Composer zu aktualisieren ..."
+  composer self-update && success "Composer aktualisiert." || warn "Composer konnte nicht aktualisiert werden."
+else
+  step "Installiere Composer neu ..."
+  curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
+  if php /tmp/composer-setup.php --quiet; then
+    sudo mv composer.phar /usr/local/bin/composer
+    success "Composer installiert: $(composer --version)"
+  else
+    error "Composer-Setup fehlgeschlagen!"
+    exit 1
+  fi
+  rm -f /tmp/composer-setup.php
+fi
+
+
+# -----------------------------------------------------------------------------
+# 🟢 Node.js via NVM
+# -----------------------------------------------------------------------------
+title "🟩 Node.js & NVM installieren"
+
+NVM_DIR="$HOME/.nvm"
+export NVM_DIR="$HOME/.nvm"
+if [[ ! -d "$NVM_DIR" ]]; then
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+fi
+
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+  source "$NVM_DIR/nvm.sh"
+  for node_ver in "${NODE_VERSIONS[@]}"; do
+    if nvm ls "$node_ver" | grep -q "$node_ver"; then
+      step "Node.js $node_ver ist bereits installiert – führe ggf. Upgrade durch"
+      nvm install "$node_ver" --reinstall-packages-from="$node_ver"
+    else
+      nvm install "$node_ver"
+    fi
+  done
+  success "Node.js installiert"
+
+  # 🎯 Aktiviere standardmäßig das letzte installierte node_ver
+  nvm use "${NODE_VERSIONS[-1]}" >/dev/null
+  nvm alias default "${NODE_VERSIONS[-1]}"
+
+  # 📦 Yarn installieren (global)
+  info "📦 Yarn installieren"
+  if ! command -v yarn &>/dev/null; then
+    npm install -g yarn
+    success "Yarn installiert: $(yarn --version)"
+  else
+    CURRENT_YARN=$(yarn --version)
+    step "Yarn ist bereits installiert: $CURRENT_YARN"
+  fi
+
+  step "Führe Upgrade durch ..."
+  npm update -g yarn && success "Yarn aktualisiert" || warn "Yarn konnte nicht aktualisiert werden"
+
+else
+  error "nvm.sh konnte nicht geladen werden."
+  exit 1
+fi
+
+
+# -----------------------------------------------------------------------------
+# 🐳 Docker CLI & Compose
+# -----------------------------------------------------------------------------
+title "🐳 Docker CLI & Compose"
+if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+  sudo mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  log "Docker GPG-Key hinzugefügt."
+else
+  info "Docker GPG-Key bereits vorhanden – überspringe"
+fi
+
+if ! grep -Rq "^deb .\+download.docker.com" /etc/apt/sources.list /etc/apt/sources.list.d/; then
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"         | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  log "Docker Repository hinzugefügt."
+else
+  info "📦 Docker Repository bereits vorhanden – überspringe"
+fi
+
+sudo apt update
+sudo apt install -y docker-ce-cli docker-compose-plugin
+success "Docker CLI & Compose installiert"
+
+
+# -----------------------------------------------------------------------------
+# 🎵 Symfony CLI
+# -----------------------------------------------------------------------------
+title "🎵 Symfony CLI prüfen & ggf. aktualisieren"
+
+if command -v symfony &>/dev/null; then
+  CURRENT_SYMFONY_VERSION=$(symfony version | head -n 1)
+  step "Symfony CLI ist bereits installiert: $CURRENT_SYMFONY_VERSION"
+  step "Aktualisiere Symfony CLI durch Neuinstallation ..."
+else
+  step "Symfony CLI ist noch nicht installiert – installiere jetzt ..."
+fi
+
+# Immer einfach den Installer erneut verwenden
+curl -sS https://get.symfony.com/cli/installer | bash
+
+SYMFONY_BIN=$(find "$HOME" -type f -path "*/.symfony*/bin/symfony" -print -quit)
+if [[ -n "$SYMFONY_BIN" ]]; then
+  mkdir -p "$HOME/.local/bin"
+  mv "$SYMFONY_BIN" "$HOME/.local/bin/symfony"
+  chmod +x "$HOME/.local/bin/symfony"
+  [[ -d /usr/local/bin && -w /usr/local/bin ]] && sudo ln -sf "$HOME/.local/bin/symfony" /usr/local/bin/symfony
+  success "Symfony CLI aktualisiert oder neu installiert"
+else
+  error "Symfony CLI konnte nicht gefunden oder installiert werden"
+fi
+
+
+
+# -----------------------------------------------------------------------------
+# 🐍 Python erweitern (venv, Tools, Abhängigkeiten)
+# -----------------------------------------------------------------------------
+title "🐍 Python-Entwicklungsumgebung einrichten"
+
+# Virtuelle Umgebung erstellen
+VENV_DIR="$HOME/.venv"
+if [[ ! -d "$VENV_DIR" ]]; then
+  step "Virtuelle Umgebung erstellen in $VENV_DIR"
+  python3 -m venv "$VENV_DIR"
+  success "Virtuelle Umgebung erstellt"
+else
+  note "Virtuelle Umgebung existiert bereits: $VENV_DIR"
+fi
+
+# Aktivieren und Tools installieren
+if [[ -f "$VENV_DIR/bin/activate" ]]; then
+  source "$VENV_DIR/bin/activate"
+  step "Aktualisiere pip"
+  pip install --upgrade pip setuptools wheel
+
+  step "Installiere nützliche Python-Tools: ${PYTHON_TOOLS[*]}"
+  pip install "${PYTHON_TOOLS[@]}"
+  success "Python-Tools installiert"
+else
+  warn "Konnte virtuelle Umgebung nicht aktivieren – $VENV_DIR/bin/activate fehlt"
+fi
+
+# requirements.txt erkennen und installieren
+REQ_FILE="$PROJECT_DIR/requirements.txt"
+if [[ -f "$REQ_FILE" ]]; then
+  step "requirements.txt gefunden – installiere Projektabhängigkeiten"
+  pip install -r "$REQ_FILE"
+  success "Abhängigkeiten aus requirements.txt installiert"
+else
+  note "Keine requirements.txt gefunden – überspringe"
+fi
+
+note "Aktiviere deine virtuelle Umgebung zukünftig mit:"
+echo -e "\n\033[1;36msource $VENV_DIR/bin/activate\033[0m"
+
+
+# -----------------------------------------------------------------------------
+# 🔐 SSH-Konfiguration
+# -----------------------------------------------------------------------------
+title "🔐 SSH-Konfiguration vorbereiten"
+
+if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
+  info "🔐 Erstelle einen neuen SSH-Key (falls noch keiner existiert)"
+  ssh-keygen -t ed25519 -C "$USER@$(hostname)" -f "$HOME/.ssh/id_ed25519" -N ""
+  success "Neuer SSH-Key wurde erstellt: $HOME/.ssh/id_ed25519"
+else
+  info "🔐 SSH-Key ist bereits vorhanden: $HOME/.ssh/id_ed25519"
+fi
+
+# Debug: Vorherige Dateiliste in ~/.ssh anzeigen
+info "Debug: Vor chmod - Dateien in \$HOME/.ssh:"
+ls -l "$HOME/.ssh"
+
+# Setze passende Berechtigungen, falls nötig
+chmod 700 "$HOME/.ssh"
+# Wildcard nicht in doppelte Anführungszeichen packen, damit sie expandiert
+chmod 600 "$HOME/.ssh"/id*
+chmod 644 "$HOME/.ssh"/id*.pub
+
+# Debug: Dateiliste nach chmod anzeigen
+info "Debug: Nach chmod - Dateien in \$HOME/.ssh:"
+ls -l "$HOME/.ssh"
+
+emptyline
+log "👉 Dein Public Key (zum Einfügen bei GitHub, GitLab, etc.):"
+echo -e "\n\033[1;36m$(cat "$HOME/.ssh/id_ed25519.pub")\033[0m"
+emptyline
+info "📁 Alternativ kannst du bestehende SSH-Schlüssel in den Ordner ~/.ssh kopieren."
+info "💡 Vergiss nicht, die Berechtigungen korrekt zu setzen (chmod 600 für private Keys)."
+
+
+# -----------------------------------------------------------------------------
+# 🔀 Git Remote URL umstellen
+# -----------------------------------------------------------------------------
+title "🔀 Git Remote URL umstellen"
+
+# Hole den aktuellen Remote-URL
+current_remote=$(git remote get-url origin)
+info "Aktueller Remote-URL: $current_remote"
+
+# Prüfe, ob der Remote-URL über HTTPS läuft
+if [[ "$current_remote" =~ ^https://github\.com/ ]]; then
+  # Wandle https://github.com/ in git@github.com: um
+  new_remote="${current_remote/https:\/\/github.com\//git@github.com:}"
+  info "Ändere Remote URL von '$current_remote' zu '$new_remote' ..."
+  git remote set-url origin "$new_remote"
+  success "Remote URL erfolgreich auf SSH umgestellt."
+else
+  info "Remote URL scheint bereits SSH zu verwenden oder ist nicht von GitHub."
+fi
+
+
+# -----------------------------------------------------------------------------
+# ✅ Abschluss
+# -----------------------------------------------------------------------------
+title "✅ Ubuntu 24.04 Entwicklungsumgebung bereit!"
+success "Deine WSL-Umgebung wurde erfolgreich eingerichtet."
+emptyline
+info "📦 WSL jetzt sauber beenden & wieder starten:"
+echo -e "\n   wsl --terminate <Name>\n   wsl -d <Name>"
+emptyline 2
+
+
+
