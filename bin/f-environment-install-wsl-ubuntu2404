@@ -216,7 +216,7 @@ if command -v composer &>/dev/null; then
   CURRENT_VERSION=$(composer --version)
   step "Composer ist bereits installiert: $CURRENT_VERSION"
   step "Versuche Composer zu aktualisieren ..."
-  composer self-update && success "Composer aktualisiert." || warn "Composer konnte nicht aktualisiert werden."
+  sudo composer self-update && success "Composer aktualisiert." || warn "Composer konnte nicht aktualisiert werden."
 else
   step "Installiere Composer neu ..."
   curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
@@ -274,6 +274,25 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
 else
   error "nvm.sh konnte nicht geladen werden."
   exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# 🐳 Node Tools
+# -----------------------------------------------------------------------------
+title "🟩 Node Tools installieren"
+
+# 📦 Angular CLI installieren (global, benutzerspezifisch)
+info "📦 Angular CLI installieren"
+if ! command -v ng &>/dev/null; then
+  npm install -g @angular/cli
+  if command -v ng &>/dev/null; then
+    success "Angular CLI installiert: $(ng version | grep 'Angular CLI' | awk '{print $3}')"
+  else
+    error "Angular CLI konnte nicht installiert werden"
+  fi
+else
+  CURRENT_NG=$(ng version | grep 'Angular CLI' | awk '{print $3}')
+  step "Angular CLI ist bereits installiert: $CURRENT_NG"
 fi
 
 
