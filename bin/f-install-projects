@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+set -e
+
+# ------------------------------------------------------------------------------
+# 📦 bin/install-projects
+# ------------------------------------------------------------------------------
+# Dieses Skript klont und initialisiert Projekte anhand einer Konfiguration
+# aus der .env-Datei. Zielverzeichnis und Repository-URLs werden dort definiert.
+# Optional wird ein setup.sh im geklonten Projekt ausgeführt.
+# ------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# 💡 Projektpfade & Bibliothek
+# -----------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$SCRIPT_DIR/../"
+FORCER_LIB="$PROJECT_DIR/lib/bash/forcer-lib.sh"
+
+if [[ -f "$FORCER_LIB" ]]; then
+  source "$FORCER_LIB"
+else
+  echo "❌ Forcer-Lib nicht gefunden: $FORCER_LIB"
+  exit 1
+fi
+
+
+# -----------------------------------------------------------------------------
+# 💡 Start
+# -----------------------------------------------------------------------------
+title "📦 Projekte klonen & konfigurieren"
+
+
+
+
+# Projektverzeichnis vorbereiten
+mkdir -p "$PROJECT_REPOS_ROOT_FOLDER"
+
+# Durchlaufe alle konfigurierten Projekte
+for entry in "${PROJECT_LIST[@]}"; do
+  IFS='|' read -r sub_path repo_url <<< "$entry"
+  target_path="$PROJECT_REPOS_ROOT_FOLDER/$sub_path"
+
+  # Wenn Projekt bereits geklont ist, überspringen
+  if [[ -d "$target_path/.git" ]]; then
+    info "🔁 '$sub_path' existiert bereits – überspringe"
+    continue
+  fi
+
+  # Zielverzeichnis (ggf. mit Unterordnern) anlegen
+  mkdir -p "$(dirname "$target_path")"
+
+  # Projekt klonen
+  step "📥 Klone '$repo_url' nach '$sub_path'"
+  git clone "$repo_url" "$target_path"
+  success "✅ '$sub_path' erfolgreich geklont"
+
+  # Optionales Setup-Skript ausführen
+  if [[ -f "$target_path/setup.sh" ]]; then
+    step "⚙️  Starte setup.sh für '$sub_path'"
+    bash "$target_path/setup.sh"
+    success "⚙️  setup.sh abgeschlossen"
+  fi
+
+  emptyline
+done
+
+success "🎉 Alle Projekte wurden erfolgreich eingerichtet."
+
+
+exit 1
+
+
+
+# Move to root folder
+cd ..
+
+# PHPStorm Projekte
+echo "Erstelle Projekte Ordner"
+
+mkdir Projekte || exit 1
+cd Projekte || exit 1
+
+echo ""
+echo ""
+
+
+# PHPStorm Projekte
+echo "Erstelle PHPStorm Projekte"
+
+mkdir PHPStorm || exit 1
+cd PHPStorm || exit 1
+
+git clone git@github.com:jostkleigrewe/symfony-app-backend-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/web_www-coole-hufe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-oauth2-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/docker-symfony-webapp-6.3.git
+#git clone git@github.com:jostkleigrewe/api-platform-api-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/alexa-core-bundle.git
+#git clone git@github.com:jostkleigrewe/openai-core-bundle.git
+#git clone git@github.com:jostkleigrewe/telegram-core-bundle.git
+#git clone git@github.com:jostkleigrewe/symfony-web-sven-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-alexa-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-www-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-alexa-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-amelia-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-tv-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/lib-php.git
+#git clone git@github.com:jostkleigrewe/symfony-web-www-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/intent-core-bundle.git
+#git clone git@github.com:jostkleigrewe/lib-ssml.git
+
+cd ..
+
+
+#
+#
+## PHPStorm Projekte
+#mkdir PHPStorm
+#cd PHPStorm
+#
+#git clone git@github.com:jostkleigrewe/symfony-app-backend-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/web_www-coole-hufe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-oauth2-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/docker-symfony-webapp-6.3.git
+#git clone git@github.com:jostkleigrewe/api-platform-api-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/alexa-core-bundle.git
+#git clone git@github.com:jostkleigrewe/openai-core-bundle.git
+#git clone git@github.com:jostkleigrewe/telegram-core-bundle.git
+#git clone git@github.com:jostkleigrewe/symfony-web-sven-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-alexa-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-app-www-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-alexa-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-amelia-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/symfony-web-tv-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/lib-php.git
+#git clone git@github.com:jostkleigrewe/symfony-web-www-jostkleigrewe-com.git
+#git clone git@github.com:jostkleigrewe/intent-core-bundle.git
+#git clone git@github.com:jostkleigrewe/lib-ssml.git
+#
+#cd ..
+#
+#
+
+
+
+
+
+
+#
+#
+#
+##!/usr/bin/env bash
+#
+#set -e
+#
+## Starte im Wurzelverzeichnis
+#cd "$(dirname "$0")/.." || exit 1
+#
+#echo "📁 Erstelle Projektstruktur ..."
+#
+#mkdir -p Projekte/PHPStorm
+#cd Projekte/PHPStorm || exit 1
+#
+## Repos definieren (KEY=Zielordner, VALUE=Git-URL)
+#declare -A REPOS=(
+#  [symfony-app-backend-jostkleigrewe-com]="git@github.com:jostkleigrewe/symfony-app-backend-jostkleigrewe-com.git"
+#  # [web_www-coole-hufe-com]="git@github.com:jostkleigrewe/web_www-coole-hufe-com.git"
+#  # Weitere Repos hier aktivieren
+#)
+#
+#echo ""
+#echo "🐙 Starte Installation der Repositories ..."
+#echo ""
+#
+#for PROJECT in "${!REPOS[@]}"; do
+#  REPO_URL="${REPOS[$PROJECT]}"
+#  echo "🔍 Projekt: $PROJECT"
+#
+#  if [ -d "$PROJECT" ]; then
+#    echo "   ✅ Bereits vorhanden – überspringe Klonen."
+#  else
+#    echo "   📥 Klone aus $REPO_URL ..."
+#    git clone "$REPO_URL" "$PROJECT"
+#  fi
+#
+#  cd "$PROJECT" || continue
+#
+#  # Composer-Install
+#  if [ -f "composer.json" ]; then
+#    echo "   📦 composer.json gefunden – führe 'composer install' aus ..."
+#    composer install --no-interaction
+#  fi
+#
+#  # Docker Compose
+#  if [ -f "docker-compose.yml" ] || [ -f "compose.yaml" ]; then
+#    echo "   🐳 Docker-Compose Datei gefunden – führe 'docker compose up -d' aus ..."
+#    docker compose up -d
+#  fi
+#
+#  echo "   ✅ $PROJECT bereit."
+#  echo ""
+#  cd ..
+#done
+#
+#echo "🎉 Alle aktiven Repositories wurden verarbeitet."
+
