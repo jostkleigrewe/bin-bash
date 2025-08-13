@@ -76,9 +76,9 @@ PACKAGES=(
 
 PHP_VERSIONS=(8.2 8.3 8.4)
 declare -A PHP_MODULES=(
-  [8.2]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
-  [8.3]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
-  [8.4]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug"
+  [8.2]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
+  [8.3]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
+  [8.4]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
 )
 
 NODE_VERSIONS=(--lts node)

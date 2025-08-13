@@ -49,9 +49,9 @@ alias yb='yarn build'
 # 🔄 Misc / Tools
 alias serve='php -S localhost:8000'
 alias uuid='uuidgen'
+alias secret32='openssl rand -hex 32'
 alias timestamp='date +%s'
 alias now='date "+%Y-%m-%d %H:%M:%S"'
-
 
 # 📦 Archivierung
 alias untar='tar -xvf'
