@@ -297,6 +297,44 @@ fi
 
 
 # -----------------------------------------------------------------------------
+# 🤖 Claude Code (CLI „claude“)
+# -----------------------------------------------------------------------------
+title "🤖 Claude Code installieren"
+
+# 📦 Claude CLI installieren (global, benutzerspezifisch)
+info "📦 Claude CLI installieren"
+if ! command -v claude &>/dev/null; then
+  npm install -g @anthropic-ai/claude-code
+  if command -v claude &>/dev/null; then
+    success "Claude CLI installiert: $(claude --version)"
+  else
+    error "Claude CLI konnte nicht installiert werden"
+  fi
+else
+  step "Claude CLI ist bereits installiert: $(claude --version)"
+fi
+
+
+# -----------------------------------------------------------------------------
+# 🤖 OpenAI Codex
+# -----------------------------------------------------------------------------
+title "🤖 OpenAI Codex installieren"
+
+# 📦 OpenAI Codex installieren (global, benutzerspezifisch)
+info "📦 OpenAI Codex installieren"
+if ! command -v codex &>/dev/null; then
+  npm install -g @openai/codex
+  if command -v codex &>/dev/null; then
+    success "OpenAI Codex installiert: $(codex --version)"
+  else
+    error "OpenAI Codex konnte nicht installiert werden"
+  fi
+else
+  step "OpenAI Codex ist bereits installiert: $(codex --version)"
+fi
+
+
+# -----------------------------------------------------------------------------
 # 🐳 Docker CLI & Compose
 # -----------------------------------------------------------------------------
 title "🐳 Docker CLI & Compose"

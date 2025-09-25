@@ -16,8 +16,6 @@ if [[ $- == *i* ]]; then
   export PS1="\[\e[0;32m\]\u@\h \[\e[0;34m\]\w\[\e[33m\]\$(parse_git_branch)\[\e[0m\]\n\$ "
 fi
 
-
-
 ## NVM
 #export NVM_DIR="\$HOME/.nvm"
 #[ -s "\$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"
@@ -59,5 +57,6 @@ fi
 #
 alias f-cd='cd ~/bin-bash'
 alias f-update='cd ~/bin-bash; git pull'
+alias f-p='cd ~/projects'
 
 echo "BIN-BASH functions added"
