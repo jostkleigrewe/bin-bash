@@ -61,9 +61,20 @@ alias targz='tar -czvf'
 alias usephp82='sudo update-alternatives --set php /usr/bin/php8.2 && php -v'
 alias usephp83='sudo update-alternatives --set php /usr/bin/php8.3 && php -v'
 alias usephp84='sudo update-alternatives --set php /usr/bin/php8.4 && php -v'
+alias usephp85='sudo update-alternatives --set php /usr/bin/php8.5 && php -v'
 
 # Composer
 alias usecomposer82='/usr/bin/php8.2 /usr/local/bin/composer'
 alias usecomposer83='/usr/bin/php8.3 /usr/local/bin/composer'
 alias usecomposer84='/usr/bin/php8.4 /usr/local/bin/composer'
+alias usecomposer85='/usr/bin/php8.5 /usr/local/bin/composer'
+
+# Ollama
+alias f-ollama-install='sudo curl -fsSL https://ollama.com/install.sh | sh'
+
+# Swap
+alias f-swap-refresh='sudo sync && sudo swapoff -a && sudo swapon -a'
+
+
+
 

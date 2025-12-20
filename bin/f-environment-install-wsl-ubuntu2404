@@ -74,11 +74,12 @@ PACKAGES=(
   jupyter-notebook        # Webbasierte interaktive Python-Umgebung
 )
 
-PHP_VERSIONS=(8.2 8.3 8.4)
+PHP_VERSIONS=(8.2 8.3 8.4 8.5)
 declare -A PHP_MODULES=(
   [8.2]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
   [8.3]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
   [8.4]="cli common mbstring xml curl intl zip bcmath gd mysql opcache readline sqlite3 xdebug amqp"
+  [8.5]="cli common mbstring xml curl intl zip bcmath gd mysql readline sqlite3 xdebug amqp"
 )
 
 NODE_VERSIONS=(--lts node)
@@ -140,9 +141,13 @@ success "Systempakete installiert."
 # -----------------------------------------------------------------------------
 title "🐘 Git konfigurieren"
 
-# Setze pull.rebase immer
+# Setze pull.rebase
 info "Setze pull.rebase auf 'true'."
 git config --global pull.rebase true
+
+# Setze core.autocrlf
+info "Setze core.autocrlf auf 'input'."
+git config --global core.autocrlf input
 
 # Debug: Aktuelle Git-Konfiguration auslesen
 current_email=$(git config --global user.email || :)
@@ -276,6 +281,7 @@ else
   exit 1
 fi
 
+
 # -----------------------------------------------------------------------------
 # 🐳 Node Tools
 # -----------------------------------------------------------------------------
@@ -333,6 +339,12 @@ else
   step "OpenAI Codex ist bereits installiert: $(codex --version)"
 fi
 
+# -----------------------------------------------------------------------------
+# 🐳 Ollama
+# -----------------------------------------------------------------------------
+#title "🐳 Ollama"
+#curl -fsSL https://ollama.com/install.sh | sh
+
 
 # -----------------------------------------------------------------------------
 # 🐳 Docker CLI & Compose
@@ -370,6 +382,7 @@ if command -v symfony &>/dev/null; then
 else
   step "Symfony CLI ist noch nicht installiert – installiere jetzt ..."
 fi
+
 
 # Immer einfach den Installer erneut verwenden
 curl -sS https://get.symfony.com/cli/installer | bash
