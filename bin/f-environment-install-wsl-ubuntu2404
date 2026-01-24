@@ -307,44 +307,69 @@ fi
 # -----------------------------------------------------------------------------
 title "🤖 Claude Code installieren"
 
-# 📦 Claude CLI installieren (global, benutzerspezifisch)
-info "📦 Claude CLI installieren"
+# 📦 Claude CLI installieren (nativ über claude.ai/install.sh)
+info "📦 Claude CLI vorbereiten / installieren"
+
+# Zuerst sicherstellen, dass die alte npm-Version entfernt wird, falls vorhanden
+if npm list -g @anthropic-ai/claude-code &>/dev/null; then
+  info "Alte npm-Version von @anthropic-ai/claude-code gefunden. Deinstalliere..."
+  npm uninstall -g @anthropic-ai/claude-code
+  success "npm-Version deinstalliert."
+fi
+
 if ! command -v claude &>/dev/null; then
-  npm install -g @anthropic-ai/claude-code
+  info "Installiere native Claude CLI..."
+  curl -fsSL https://claude.ai/install.sh | bash
   if command -v claude &>/dev/null; then
     success "Claude CLI installiert: $(claude --version)"
   else
     error "Claude CLI konnte nicht installiert werden"
   fi
 else
-  step "Claude CLI ist bereits installiert: $(claude --version)"
+  # Wenn bereits installiert, prüfen ob es noch ein Überbleibsel von npm im Pfad ist
+  CLAUDE_PATH=$(which claude)
+  if [[ "$CLAUDE_PATH" == *"/npm/"* || "$CLAUDE_PATH" == *"/node"* ]]; then
+    info "Claude im Pfad scheint noch die npm-Version zu sein ($CLAUDE_PATH). Erneute Installation..."
+    curl -fsSL https://claude.ai/install.sh | bash
+    success "Claude CLI auf native Version umgestellt: $(claude --version)"
+  else
+    info "Versuche Claude CLI zu aktualisieren..."
+    if claude update &>/dev/null; then
+      success "Claude CLI aktualisiert oder bereits aktuell: $(claude --version)"
+    else
+      step "Claude CLI ist bereits installiert (nativ): $(claude --version)"
+    fi
+  fi
 fi
 
 
 # -----------------------------------------------------------------------------
 # 🤖 Claude Code: Attribution in Git-Commits deaktivieren
 # -----------------------------------------------------------------------------
-title "🤖 Claude Code konfigurieren (z.B. keine Git-Attribution in Commits)"
+title "🤖 Claude Code konfigurieren"
 
-CLAUDE_DIR="$HOME/.claude"
-CLAUDE_SETTINGS="$CLAUDE_DIR/settings.json"
-
-mkdir -p "$CLAUDE_DIR"
-
-# Settings schreiben (überschreibt bewusst, damit es deterministisch ist)
-cat > "$CLAUDE_SETTINGS" <<'JSON'
+if command -v claude &>/dev/null; then
+  # Verwende den offiziellen Weg über das Tool selbst, falls möglich
+  # -g setzt es global in ~/.claude/config.json
+  # 'auto-at-mention' ist oft der interne Name, 'gitCoAuthor' laut Reddit
+  # Wir setzen beide zur Sicherheit, falls die CLI es unterstützt
+  claude config set -g gitCoAuthor false &>/dev/null || true
+  claude config set -g auto-at-mention false &>/dev/null || true
+  success "Claude Code Git-Attribution deaktiviert (via claude config)"
+else
+  # Fallback: Manuelle Datei-Erstellung (wie bereits vorhanden, aber präziser)
+  CLAUDE_DIR="$HOME/.claude"
+  CLAUDE_SETTINGS="$CLAUDE_DIR/settings.json"
+  mkdir -p "$CLAUDE_DIR"
+  cat > "$CLAUDE_SETTINGS" <<'JSON'
 {
-  "includeCoAuthoredBy": false,
-  "gitAttribution": false,
-  "attribution": {
-    "commits": false,
-    "pullRequests": false
-  }
+  "gitCoAuthor": false,
+  "auto-at-mention": false
 }
 JSON
-
-chmod 600 "$CLAUDE_SETTINGS"
-success "Claude Code Settings geschrieben: $CLAUDE_SETTINGS"
+  chmod 600 "$CLAUDE_SETTINGS"
+  success "Claude Code Settings manuell geschrieben: $CLAUDE_SETTINGS"
+fi
 
 
 # -----------------------------------------------------------------------------
@@ -522,6 +547,15 @@ if [[ "$current_remote" =~ ^https://github\.com/ ]]; then
 else
   info "Remote URL scheint bereits SSH zu verwenden oder ist nicht von GitHub."
 fi
+
+
+# -----------------------------------------------------------------------------
+# 🧹 Aufräumen (optional)
+# -----------------------------------------------------------------------------
+title "🧹 System aufräumen"
+info "Entferne nicht mehr benötigte Pakete..."
+sudo apt autoremove -y
+success "System bereinigt."
 
 
 # -----------------------------------------------------------------------------
