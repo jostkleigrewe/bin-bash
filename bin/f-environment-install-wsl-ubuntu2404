@@ -322,6 +322,32 @@ fi
 
 
 # -----------------------------------------------------------------------------
+# 🤖 Claude Code: Attribution in Git-Commits deaktivieren
+# -----------------------------------------------------------------------------
+title "🤖 Claude Code konfigurieren (z.B. keine Git-Attribution in Commits)"
+
+CLAUDE_DIR="$HOME/.claude"
+CLAUDE_SETTINGS="$CLAUDE_DIR/settings.json"
+
+mkdir -p "$CLAUDE_DIR"
+
+# Settings schreiben (überschreibt bewusst, damit es deterministisch ist)
+cat > "$CLAUDE_SETTINGS" <<'JSON'
+{
+  "includeCoAuthoredBy": false,
+  "gitAttribution": false,
+  "attribution": {
+    "commits": false,
+    "pullRequests": false
+  }
+}
+JSON
+
+chmod 600 "$CLAUDE_SETTINGS"
+success "Claude Code Settings geschrieben: $CLAUDE_SETTINGS"
+
+
+# -----------------------------------------------------------------------------
 # 🤖 OpenAI Codex
 # -----------------------------------------------------------------------------
 title "🤖 OpenAI Codex installieren"
