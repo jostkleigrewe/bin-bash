@@ -42,6 +42,7 @@ PACKAGES=(
   ca-certificates         # SSL-Zertifikate für HTTPS-Zugriff
   lsb-release             # LSB-Release-Info (z. B. für `lsb_release -a`)
   apt-transport-https     # Unterstützt apt über HTTPS (sicherer Paketbezug)
+  jq                      # Standard-Tool für JSON in Shell-Scripts
 
   # 🔧 Komfort & Dateiverarbeitung
   dos2unix                # Konvertiert Windows-Zeilenenden (CRLF → LF)
